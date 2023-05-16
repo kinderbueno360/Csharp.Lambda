@@ -56,4 +56,26 @@ namespace Csharp.Lambda
             };
         }
     }
+
+    public static class ValidationExtensions
+    {
+        public static Validation<V> SelectMany<T, U, V>(
+            this Validation<T> validation,
+            Func<T, Validation<U>> bind,
+            Func<T, U, V> project)
+        {
+            return validation switch
+            {
+                Validation<T>.Valid valid =>
+                    bind(valid.Value) switch
+                    {
+                        Validation<U>.Valid u => new Validation<V>.Valid(project(valid.Value, u.Value)),
+                        Validation<U>.Invalid invalid => new Validation<V>.Invalid(invalid.Errors),
+                        _ => throw new NotImplementedException()
+                    },
+                Validation<T>.Invalid invalid => new Validation<V>.Invalid(invalid.Errors),
+                _ => throw new NotImplementedException()
+            };
+        }
+    }
 }
